@@ -9,7 +9,11 @@ export default function Detail() {
       <h1>Detail Page</h1>
       <Link to="b">to a page</Link>
       <p>
-        <button type="button" onClick={() => setCount(count => count + 1)}>
+        <button
+          className="btn px-1 bg-red-500"
+          type="button"
+          onClick={() => setCount(count => count + 1)}
+        >
           count is: {count}
         </button>
       </p>

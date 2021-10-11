@@ -1,14 +1,20 @@
 import type { PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
+import windicss from 'vite-plugin-windicss';
 import { resolveOptions } from './options';
 import { PagesService } from './pages';
 import { generateRoutes, generateRoutesCode } from './routes';
 import {
+  PLUGIN_NAME,
   ROUTES_REQUEST_IDS,
   ROUTES_MODULE_ID,
   ENTRY_MODULE_ID,
+  ENTRY_FILE,
 } from './constants';
 import { Route, UserOptions } from './types';
+import { slash } from './utils';
+
+const slashedEntryFile = slash(ENTRY_FILE);
 
 export const reactApp = (userOptions: UserOptions = {}): PluginOption[] => {
   let options = resolveOptions(userOptions);
@@ -17,18 +23,15 @@ export const reactApp = (userOptions: UserOptions = {}): PluginOption[] => {
   let generatedRoutes: Route[] | null = null;
 
   return [
-    ...react(options.react),
     {
-      name: 'react-app:prepare',
+      name: `${PLUGIN_NAME}:entry`,
       config() {
         return {
           resolve: {
             alias: [
               {
                 find: ENTRY_MODULE_ID,
-                replacement: require.resolve(
-                  'vite-plugin-react-app/dist/client/entry.client.js'
-                ),
+                replacement: ENTRY_FILE,
               },
             ],
           },
@@ -40,9 +43,6 @@ export const reactApp = (userOptions: UserOptions = {}): PluginOption[] => {
         // TODO: support multi entry
         // entries = getEntries(config.root, config.build.rollupOptions.input);
       },
-    },
-    {
-      name: 'react-app:html',
       transformIndexHtml() {
         return [
           {
@@ -60,9 +60,16 @@ export const reactApp = (userOptions: UserOptions = {}): PluginOption[] => {
           },
         ];
       },
+      transform(code, id) {
+        if (id === slashedEntryFile) {
+          return `${
+            options.windicss ? `import 'virtual:windi.css';\n` : ''
+          }${code}`;
+        }
+      },
     },
     {
-      name: 'react-app:pages',
+      name: `${PLUGIN_NAME}:pages`,
       configureServer(server) {
         pagesService = new PagesService(
           options,
@@ -107,6 +114,8 @@ export const reactApp = (userOptions: UserOptions = {}): PluginOption[] => {
         return routesCode;
       },
     },
+    ...(options.react ? react(options.react) : []),
+    ...(options.windicss ? windicss(options.windicss) : []),
   ];
 };
 

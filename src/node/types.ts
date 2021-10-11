@@ -1,4 +1,5 @@
 import { Options as ViteReactOptions } from '@vitejs/plugin-react';
+import { UserOptions as WindicssOptions } from 'vite-plugin-windicss';
 
 export type ComponentImportMode =
   | 'sync'
@@ -91,10 +92,19 @@ export interface UserOptions {
     code: string
   ) => string | void | Promise<string | void>;
   /**
-   * @vitejs/plugin-react options.
-   * @see https://github.com/vitejs/vite/tree/main/packages/plugin-react
+   * @vitejs/plugin-react options
+   * https://github.com/vitejs/vite/tree/main/packages/plugin-react
+   *
+   * If set to false, it will disable vite react plugin
    */
-  react?: ViteReactOptions;
+  react?: ViteReactOptions | false;
+  /**
+   * vite-plugin-windicss options
+   * https://github.com/windicss/vite-plugin-windicss
+   *
+   * If set to false, it will disable windicss plugin
+   */
+  windicss?: WindicssOptions | false;
 }
 
 export interface ResolvedOptions extends Required<UserOptions> {

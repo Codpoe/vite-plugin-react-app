@@ -87,5 +87,6 @@ export function resolveOptions(
     onRoutesGenerated,
     onRoutesCodeGenerated,
     react: {},
+    windicss: {},
   };
 }

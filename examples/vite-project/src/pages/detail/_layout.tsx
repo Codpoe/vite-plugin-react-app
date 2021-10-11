@@ -8,7 +8,7 @@ export default function DetailLayout() {
 
   return (
     <div>
-      <h1>Detail Layout</h1>
+      <h1 className="text-indigo-500">Detail Layout</h1>
       <Suspense fallback="detail loading">
         <Outlet />
       </Suspense>
