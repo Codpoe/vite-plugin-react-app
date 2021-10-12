@@ -35,8 +35,6 @@ export function generateRoutes(pages: Record<string, Page>): Route[] {
         break;
       }
 
-      // TODO: 404 page
-
       parentRouteStack.pop();
     }
 

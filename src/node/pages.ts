@@ -12,7 +12,8 @@ function resolveRoutePath(baseRoutePath: string, relativeFilePath: string) {
     .replace(/index$/, '') // remove 'index'
     .replace(/README$/i, '') // remove 'README'
     .replace(/\/$/, '') // remove trail slash
-    .replace(/\[(.*?)\]/g, ':$1'); // transform 'user/[id]' to 'user/:id'
+    .replace(/\[(.*?)\]/g, ':$1') // transform 'user/[id]' to 'user/:id'
+    .replace(/404$/, '*'); // transform '/404' to '/*' so this route acts like a catch-all for URLs that we don't have explicit routes for
 
   return path.posix.join(baseRoutePath, routePath);
 }
