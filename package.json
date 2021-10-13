@@ -34,12 +34,15 @@
     "build-client": "tsc -p src/client"
   },
   "dependencies": {
+    "@mdx-js/mdx": "^2.0.0-next.9",
+    "@mdx-js/react": "^2.0.0-next.9",
     "@svgr/core": "^5.5.0",
     "@vitejs/plugin-react": "^1.0.0",
     "chokidar": "^3.5.2",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
     "unplugin-icons": "^0.12.14",
+    "vite-plugin-mdx": "^3.5.8",
     "vite-plugin-windicss": "^1.4.10"
   },
   "devDependencies": {

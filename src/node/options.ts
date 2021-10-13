@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import { MdxOptions } from 'vite-plugin-mdx';
 import {
   UserOptions,
   ResolvedOptions,
@@ -58,6 +59,24 @@ function resolvePages(
   }, {} as ResolvedPages);
 }
 
+function resolveMdx(mdx?: UserOptions['mdx']): NonNullable<UserOptions['mdx']> {
+  if (mdx === false) {
+    return false;
+  }
+
+  const mergeDefault = (options?: MdxOptions): MdxOptions => ({
+    ...options,
+    remarkPlugins: [...(options?.remarkPlugins || [])],
+    rehypePlugins: [...(options?.rehypePlugins || [])],
+  });
+
+  if (typeof mdx === 'function') {
+    return (filename: string) => mergeDefault(mdx(filename));
+  }
+
+  return mergeDefault(mdx);
+}
+
 export function resolveOptions(
   userOptions: UserOptions,
   root = slash(process.cwd()),
@@ -97,5 +116,6 @@ export function resolveOptions(
             scale: 1,
             ...userOptions.icons,
           },
+    mdx: resolveMdx(userOptions.mdx),
   };
 }

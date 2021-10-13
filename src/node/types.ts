@@ -1,6 +1,7 @@
 import { Options as ViteReactOptions } from '@vitejs/plugin-react';
 import { UserOptions as WindicssOptions } from 'vite-plugin-windicss';
 import { Options as IconsOptions } from 'unplugin-icons';
+import { MdxOptions } from 'vite-plugin-mdx';
 
 export type ComponentImportMode =
   | 'sync'
@@ -106,6 +107,13 @@ export interface UserOptions {
    * If set to false, it will disable icons plugin.
    */
   icons?: IconsOptions | false;
+  /**
+   * vite-plugin-mdx options
+   * https://github.com/brillout/vite-plugin-mdx
+   *
+   * If set to false, it will disable mdx plugin.
+   */
+  mdx?: MdxOptions | ((filename: string) => MdxOptions) | false;
 }
 
 export interface ResolvedOptions extends Required<UserOptions> {
