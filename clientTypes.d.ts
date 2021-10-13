@@ -12,3 +12,15 @@ declare module 'virtual:react-app/routes' {
 
   export default routes;
 }
+
+declare module 'virtual:icons/*' {
+  import React, { SVGProps } from 'react';
+  const component: (props: SVGProps<SVGSVGElement>) => React.ReactElement;
+  export default component;
+}
+
+declare module '~icons/*' {
+  import React, { SVGProps } from 'react';
+  const component: (props: SVGProps<SVGSVGElement>) => React.ReactElement;
+  export default component;
+}

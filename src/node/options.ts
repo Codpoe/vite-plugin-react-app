@@ -16,7 +16,7 @@ function resolvePages(
   pages: UserPages,
   root: string,
   base: string,
-  defaultIgnored?: any
+  defaultIgnored: any = []
 ): ResolvedPages {
   if (typeof pages === 'string' || checkIsPagesObj(pages)) {
     pages = {
@@ -64,7 +64,6 @@ export function resolveOptions(
   base = '/'
 ): ResolvedOptions {
   const {
-    id = '',
     src = 'src',
     pages = 'src/pages',
     ignored = [],
@@ -73,10 +72,11 @@ export function resolveOptions(
     onPagesGenerated = pages => pages,
     onRoutesGenerated = routes => routes,
     onRoutesCodeGenerated = code => code,
+    react = {},
+    windicss = {},
   } = userOptions;
 
   return {
-    id,
     root,
     src: resolve(root, src),
     pages: resolvePages(pages, root, base, ignored),
@@ -86,7 +86,16 @@ export function resolveOptions(
     onPagesGenerated,
     onRoutesGenerated,
     onRoutesCodeGenerated,
-    react: {},
-    windicss: {},
+    react,
+    windicss,
+    icons:
+      userOptions.icons === false
+        ? false
+        : {
+            compiler: 'jsx',
+            autoInstall: true,
+            scale: 1,
+            ...userOptions.icons,
+          },
   };
 }

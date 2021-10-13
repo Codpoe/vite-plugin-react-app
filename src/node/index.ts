@@ -1,6 +1,7 @@
 import type { PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import windicss from 'vite-plugin-windicss';
+import icons from 'unplugin-icons/vite';
 import { resolveOptions } from './options';
 import { PagesService } from './pages';
 import { generateRoutes, generateRoutesCode } from './routes';
@@ -116,9 +117,12 @@ export const reactApp = (userOptions: UserOptions = {}): PluginOption[] => {
     },
     ...(options.react ? react(options.react) : []),
     ...(options.windicss ? windicss(options.windicss) : []),
+    options.icons && icons(options.icons),
   ];
 };
 
 export default reactApp;
+
+export { FileSystemIconLoader } from 'unplugin-icons/loaders';
 
 export * from './types';
