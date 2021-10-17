@@ -1,0 +1,50 @@
+{
+  "name": "vite-plugin-react-app",
+  "version": "0.1.0",
+  "description": "vite plugin for building react app",
+  "main": "dist/node/index.js",
+  "types": "dist/node/index.d.ts",
+  "exports": {
+    ".": "./dist/node/index.js",
+    "./*": "./*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Codpoe/vite-plugin-react-app.git"
+  },
+  "author": "codpoe <codpoe.me@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Codpoe/vite-plugin-react-app/issues"
+  },
+  "homepage": "https://github.com/Codpoe/vite-plugin-react-app#readme",
+  "scripts": {
+    "dev": "concurrently \"npm:dev-*\"",
+    "dev-node": "tsc -w -p src/node",
+    "dev-client": "tsc -w -p src/client",
+    "build": "rimraf dist && concurrently \"npm:build-*\"",
+    "build-node": "tsc -p src/node",
+    "build-client": "tsc -p src/client"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^1.6.22",
+    "@svgr/core": "^5.5.0",
+    "@vitejs/plugin-react": "^1.0.0",
+    "chokidar": "^3.5.2",
+    "fast-glob": "^3.2.7",
+    "fs-extra": "^10.0.0",
+    "unplugin-icons": "^0.12.14",
+    "vite-plugin-mdx": "^3.5.8",
+    "vite-plugin-windicss": "^1.4.10"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^16.7.6",
+    "@types/react": "^17.0.27",
+    "@types/react-dom": "^17.0.9",
+    "history": "^5.0.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router-dom": "^6.0.0-beta.6"
+  }
+}
