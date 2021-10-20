@@ -12,3 +12,6 @@ export const ROUTES_REQUEST_IDS = [
   '/@react-app/routes',
 ];
 export const ROUTES_MODULE_ID = '/@react-app/routes';
+
+// mdx demo
+export const MDX_DEMO_RE = /<Demo\s+src=["'](.*?)["']/;

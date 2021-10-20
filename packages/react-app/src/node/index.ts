@@ -14,13 +14,7 @@ export function reactApp(options: UserOptions = {}): PluginOption[] {
       useWindicss: options.windicss !== false,
     }),
     // mdx
-    ...(options.mdx !== false
-      ? createMdxPlugin({
-          ...options.mdx,
-          remarkPlugins: [...(options.mdx?.remarkPlugins || [])],
-          rehypePlugins: [...(options.mdx?.rehypePlugins || [])],
-        })
-      : []),
+    ...(options.mdx !== false ? createMdxPlugin(options.mdx) : []),
     // react
     ...(options.react !== false ? react(options.react) : []),
     // windicss
