@@ -1,6 +1,6 @@
 import type { Root } from 'mdast';
 
-export function TsInfoMdxPlugin() {
+export function tsInfoMdxPlugin() {
   return function TsInfotransformer(tree: Root) {
     const addImports: string[] = [];
 

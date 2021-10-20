@@ -28,10 +28,11 @@ importers:
       typescript: 4.4.3
       vite: 2.6.5
 
-  examples/vite-project:
+  packages/playground/vite-project:
     specifiers:
       '@iconify-json/tabler': ^1.0.1
       '@mdx-js/react': ^1.6.22
+      '@types/mdx-js__react': ^1.5.4
       '@types/react': ^17.0.0
       '@types/react-dom': ^17.0.0
       '@vitejs/plugin-react': ^1.0.0
@@ -50,12 +51,13 @@ importers:
       react-router-dom: 6.0.0-beta.7_94912414cd94cc5bc891cce65dd59788
     devDependencies:
       '@iconify-json/tabler': 1.0.1
+      '@types/mdx-js__react': 1.5.4
       '@types/react': 17.0.27
       '@types/react-dom': 17.0.9
       '@vitejs/plugin-react': 1.0.2
       typescript: 4.4.3
       vite: 2.6.5
-      vite-plugin-react-app: link:../../packages/react-app
+      vite-plugin-react-app: link:../../react-app
 
   packages/react-app:
     specifiers:
@@ -70,6 +72,7 @@ importers:
       fast-glob: ^3.2.7
       fs-extra: ^10.0.0
       history: ^5.0.1
+      jest-docblock: ^27.0.6
       react: ^17.0.2
       react-dom: ^17.0.2
       react-router-dom: ^6.0.0-beta.6
@@ -83,6 +86,7 @@ importers:
       chokidar: 3.5.2
       fast-glob: 3.2.7
       fs-extra: 10.0.0
+      jest-docblock: 27.0.6
       unplugin-icons: 0.12.14_@svgr+core@5.5.0+vite@2.6.5
       vite-plugin-mdx: 3.5.8_@mdx-js+mdx@1.6.22+vite@2.6.5
       vite-plugin-windicss: 1.4.10_vite@2.6.5
@@ -666,6 +670,12 @@ packages:
       '@types/unist': 2.0.6
     dev: false
 
+  /@types/mdx-js__react/1.5.4:
+    resolution: {integrity: sha512-hce+Hymj3cEMOma13eQRhpT3mhQrOkN4CAYEwKWB/qj2BiuUrrTpCkOShEERGmLVgDc3nxF4Dc0k7W999EQxnQ==}
+    dependencies:
+      '@types/react': 17.0.27
+    dev: true
+
   /@types/node/16.10.3:
     resolution: {integrity: sha512-ho3Ruq+fFnBrZhUYI46n/bV2GjwzSkwuT4dTf0GkuNFmnb8nq4ny2z9JEVemFi6bdEJanHLlYfy9c6FN9B9McQ==}
     dev: true
@@ -1212,6 +1222,11 @@ packages:
     resolution: {integrity: sha512-8zdsQA5bIkoRECvCrNKPla84lyoR7DSAyf7p0YgXzBO9PDJx8KntPUay7NS6yp+KdxdVtiE5SpHKtbp2ZQyA9g==}
     dependencies:
       repeat-string: 1.6.1
+    dev: false
+
+  /detect-newline/3.1.0:
+    resolution: {integrity: sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==}
+    engines: {node: '>=8'}
     dev: false
 
   /dir-glob/3.0.1:
@@ -1935,6 +1950,13 @@ packages:
 
   /isexe/2.0.0:
     resolution: {integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=}
+
+  /jest-docblock/27.0.6:
+    resolution: {integrity: sha512-Fid6dPcjwepTFraz0YxIMCi7dejjJ/KL9FBjPYhBp4Sv1Y9PdhImlKZqYU555BlN4TQKaTc+F2Av1z+anVyGkA==}
+    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
+    dependencies:
+      detect-newline: 3.1.0
+    dev: false
 
   /jiti/1.12.6:
     resolution: {integrity: sha512-drQ/qnYriF9KiU47sRF0rTvfQmJo4JEmFMhCk2SJIsUj+hGnQaxkwaKfyvK9KenX20JNTQmVfJOz7VWe0cSntw==}
