@@ -3,23 +3,20 @@
  */
 import type { Root } from 'mdast';
 import * as ts from 'typescript';
+import { MDX_TS_INFO_RE } from '../constants';
 
 export interface TsInterfaceInfo {
   name: string;
-  // commentText: string
   description: string;
-  // fullText: string
   properties: TsInterfacePropertyInfo[];
 }
 
 export interface TsInterfacePropertyInfo {
   name: string;
-  // commentText: string
   type: string;
   description: string;
-  defaultValue: string | undefined;
-  // fullText: string
   optional: boolean;
+  defaultValue: string | undefined;
 }
 
 const defaultTsConfig: ts.CompilerOptions = {
@@ -27,16 +24,16 @@ const defaultTsConfig: ts.CompilerOptions = {
 };
 
 export function extractInterfaceInfo(
-  fileName: string,
+  filePath: string,
   exportName: string,
   options: ts.CompilerOptions = defaultTsConfig
 ): TsInterfaceInfo {
   // Build a program using the set of root file names in fileNames
-  const program = ts.createProgram([fileName], options);
+  const program = ts.createProgram([filePath], options);
   // Get the checker, we will use it to find more about classes
   const checker = program.getTypeChecker();
 
-  const sourceFile = program.getSourceFile(fileName)!;
+  const sourceFile = program.getSourceFile(filePath)!;
 
   // inspired by
   // https://github.com/microsoft/rushstack/blob/6ca0cba723ad8428e6e099f12715ce799f29a73f/apps/api-extractor/src/analyzer/ExportAnalyzer.ts#L702
@@ -44,104 +41,101 @@ export function extractInterfaceInfo(
   const fileSymbol = checker.getSymbolAtLocation(sourceFile);
 
   if (!fileSymbol || !fileSymbol.exports) {
-    throw new Error(`Unexpected fileSymbol`);
+    throw new Error(`Unexpected fileSymbol. ${filePath}`);
   }
 
   const escapedExportName = ts.escapeLeadingUnderscores(exportName);
   const exportSymbol = fileSymbol.exports.get(escapedExportName);
 
   if (!exportSymbol) {
-    throw new Error(`Named export ${exportName} is not found in file`);
+    throw new Error(
+      `Named export '${exportName}' is not found in file ${filePath}`
+    );
   }
 
   const sourceDeclareSymbol = getAliasedSymbolIfNecessary(exportSymbol);
-  const sourceDeclare = sourceDeclareSymbol.declarations?.[0];
+  const sourceDeclaration = sourceDeclareSymbol.declarations?.[0];
 
-  if (!sourceDeclare) {
-    throw new Error(`Can not find sourceDeclare for ${exportName}`);
+  if (!sourceDeclaration) {
+    throw new Error(`Can not find sourceDeclaration for ${exportName}`);
   }
 
   const interfaceInfo = collectInterfaceInfo(
-    sourceDeclare,
+    sourceDeclaration,
     sourceDeclareSymbol
   );
+
   return interfaceInfo;
 
   function getAliasedSymbolIfNecessary(symbol: ts.Symbol) {
-    if ((symbol.flags & ts.SymbolFlags.Alias) !== 0)
+    if ((symbol.flags & ts.SymbolFlags.Alias) !== 0) {
       return checker.getAliasedSymbol(symbol);
+    }
     return symbol;
   }
 
-  function collectInterfaceInfo(node: ts.Declaration, symbol: ts.Symbol) {
-    if (!ts.isInterfaceDeclaration(node))
+  function collectInterfaceInfo(
+    sourceDeclaration: ts.Declaration,
+    sourceSymbol: ts.Symbol
+  ) {
+    if (!ts.isInterfaceDeclaration(sourceDeclaration)) {
       throw new Error(`Target is not an InterfaceDeclaration`);
+    }
 
-    const type = checker.getTypeAtLocation(node);
-    if (!symbol) throw new Error(`Can not find symbol`);
+    if (!sourceSymbol) {
+      throw new Error(`Can not find symbol`);
+    }
 
-    const name = node.name.getText();
-    const commentText =
-      getComment(node, node.getSourceFile().getFullText()) ?? '';
+    const name = sourceDeclaration.name.getText();
     const description = ts.displayPartsToString(
-      symbol.getDocumentationComment(checker)
+      sourceSymbol.getDocumentationComment(checker)
     );
 
     const propertiesInfo: TsInterfacePropertyInfo[] = [];
 
     // extract property info
-    symbol.members?.forEach(symbol => {
-      const name = symbol.name;
-      const declaration = symbol.valueDeclaration;
+    sourceSymbol.members?.forEach(member => {
+      const { name: memberName, valueDeclaration } = member;
+
       if (
-        !(
-          declaration &&
-          (ts.isPropertySignature(declaration) ||
-            ts.isMethodSignature(declaration))
-        )
+        !valueDeclaration ||
+        (!ts.isPropertySignature(valueDeclaration) &&
+          !ts.isMethodSignature(valueDeclaration))
       ) {
         throw new Error(
-          `Unexpected declaration type in interface. name: ${name}, kind: ${
-            ts.SyntaxKind[declaration?.kind as any]
+          `Unexpected declaration type in interface. name: ${memberName}, kind: ${
+            ts.SyntaxKind[valueDeclaration?.kind as ts.SyntaxKind]
           }`
         );
       }
-      const commentText =
-        getComment(declaration, declaration.getSourceFile().getFullText()) ??
-        '';
-      const typeText = declaration.type?.getFullText() ?? '';
-      const description = ts.displayPartsToString(
-        symbol.getDocumentationComment(checker)
-      );
 
-      const isOptional = !!(symbol.getFlags() & ts.SymbolFlags.Optional);
+      const typeText = valueDeclaration.type?.getText() ?? '';
+      const description = ts.displayPartsToString(
+        member.getDocumentationComment(checker)
+      );
+      const optional = Boolean(member.getFlags() & ts.SymbolFlags.Optional);
+
       // get defaultValue from jsDocTags
-      const jsDocTags = symbol.getJsDocTags();
+      const jsDocTags = member.getJsDocTags();
       const defaultValueTag = jsDocTags.find(
         t => t.name === 'defaultValue' || 'default'
       );
-      const defaultValue = defaultValueTag?.text?.[0].text;
+      const defaultValue = defaultValueTag?.text?.[0]?.text;
 
       propertiesInfo.push({
-        name,
-        // commentText,
+        name: memberName,
         type: typeText,
         description,
         defaultValue,
-        optional: isOptional,
-        // fullText: declaration.getFullText(),
+        optional,
       });
     });
 
-    const interfaceInfo: TsInterfaceInfo = {
+    return {
       name,
-      // commentText,
       description,
       properties: propertiesInfo,
-      // fullText: node.getFullText(),
     };
-
-    return interfaceInfo;
   }
 
   /** True if this is visible outside this file, false otherwise */
@@ -156,22 +150,25 @@ export function extractInterfaceInfo(
   }
 }
 
-function getJSDocCommentRanges(
-  node: ts.Node,
-  text: string
-): ts.CommentRange[] | undefined {
+function getComment(declaration: ts.Declaration, sourceFileFullText: string) {
   // Compiler internal:
   // https://github.com/microsoft/TypeScript/blob/66ecfcbd04b8234855a673adb85e5cff3f8458d4/src/compiler/utilities.ts#L1202
-  return (ts as any).getJSDocCommentRanges.apply(ts, arguments);
-}
+  const ranges = (ts as any).getJSDocCommentRanges.call(
+    ts,
+    declaration,
+    sourceFileFullText
+  );
 
-function getComment(declaration: ts.Declaration, sourceFileFullText: string) {
-  const ranges = getJSDocCommentRanges(declaration, sourceFileFullText);
-  if (!ranges || !ranges.length) return;
+  if (!ranges || !ranges.length) {
+    return;
+  }
+
   const range = ranges[ranges.length - 1];
-  if (!range) return;
-  const text = sourceFileFullText.slice(range.pos, range.end);
-  return text;
+  if (!range) {
+    return;
+  }
+
+  return sourceFileFullText.slice(range.pos, range.end);
 }
 
 /**
@@ -197,14 +194,13 @@ export function tsInfoMdxPlugin() {
 
     tree.children.forEach((child: any) => {
       if ((child.type as string) === 'jsx') {
-        const regexp = /<TsInfo\s+src=["'](.*?)["']\s+name=["'](.*?)["']/;
+        const regexp = MDX_TS_INFO_RE;
         const [, src, name] = (child.value as string).match(regexp) || [];
 
         if (src && name) {
-          const imported = `_tsInfo${addImports.length}`;
+          const imported = `__tsInfo_${addImports.length}`;
           addImports.push(
-            `import '${src}';`,
-            `import * as ${imported} from '${src}?tsInfo=${name}'';`
+            `import * as ${imported} from '${src}?tsInfo=${name}';`
           );
           child.value = `<TsInfo {...${imported}} />`;
         }
@@ -220,4 +216,9 @@ export function tsInfoMdxPlugin() {
       })
     );
   };
+}
+
+export function loadTsInfo(filePath: string, exportName: string): string {
+  const tsInfo = extractInterfaceInfo(filePath, exportName);
+  return `export const info = ${JSON.stringify(tsInfo)}`;
 }

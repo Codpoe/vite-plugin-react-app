@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { MDXProvider } from '@mdx-js/react';
 
 function Demo(props: any) {
-  console.log(props);
   return (
     <>
       {props.children}
@@ -13,11 +12,19 @@ function Demo(props: any) {
   );
 }
 
+function TsInfo(props: any) {
+  return (
+    <pre className="whitespace-pre-wrap">
+      {JSON.stringify(props.info, null, 2)}
+    </pre>
+  );
+}
+
 export default function AppLayout() {
   return (
     <div>
       <h1>App Layout</h1>
-      <MDXProvider components={{ Demo }}>
+      <MDXProvider components={{ Demo, TsInfo }}>
         <Suspense fallback="app loading">
           <Outlet />
         </Suspense>

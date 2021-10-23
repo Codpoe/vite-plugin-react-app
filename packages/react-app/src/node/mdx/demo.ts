@@ -33,7 +33,7 @@ export function demoMdxPlugin() {
   };
 }
 
-export async function loadDemo(demoPath: string) {
+export async function loadDemo(demoPath: string): Promise<string> {
   demoPath = demoPath.replace(/\?demo$/, '');
 
   const code = await readFile(demoPath, 'utf-8');
