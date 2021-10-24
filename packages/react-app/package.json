@@ -35,7 +35,7 @@
     "fs-extra": "^10.0.0",
     "jest-docblock": "^27.0.6",
     "unplugin-icons": "^0.12.14",
-    "vite-plugin-mdx": "^3.5.8",
+    "vite-plugin-react-mdx": "^0.1.1",
     "vite-plugin-windicss": "^1.4.10"
   },
   "devDependencies": {

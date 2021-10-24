@@ -1,7 +1,7 @@
 import { Options as ViteReactOptions } from '@vitejs/plugin-react';
 import { UserOptions as WindicssOptions } from 'vite-plugin-windicss';
 import { Options as IconsOptions } from 'unplugin-icons';
-import { MdxOptions } from 'vite-plugin-mdx';
+import { ReactMdxOptions } from 'vite-plugin-react-mdx';
 
 export interface PagesObj {
   dir: string;
@@ -101,10 +101,10 @@ export interface UserOptions {
    */
   icons?: IconsOptions | false;
   /**
-   * vite-plugin-mdx options
-   * https://github.com/brillout/vite-plugin-mdx
+   * vite-plugin-react-mdx options
+   * https://github.com/codpoe/vite-plugin-react-mdx
    *
    * If set to false, it will disable mdx plugin.
    */
-  mdx?: MdxOptions | false;
+  mdx?: ReactMdxOptions | false;
 }

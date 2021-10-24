@@ -1,15 +1,25 @@
 import { Plugin } from 'vite';
-import viteMdx, { MdxOptions } from 'vite-plugin-mdx';
+import reactMdx, { ReactMdxOptions } from 'vite-plugin-react-mdx';
 import {
   DEMO_MODULE_ID_PREFIX,
   PLUGIN_NAME,
   TS_INFO_MODULE_ID_PREFIX,
 } from '../constants';
-import { demoMdxPlugin, loadDemo } from './demo';
-import { tsInfoMdxPlugin, loadTsInfo } from './tsInfo';
+import {
+  demoMdxPlugin,
+  extractDemoPath,
+  getDemoModuleId,
+  loadDemo,
+} from './demo';
+import {
+  tsInfoMdxPlugin,
+  loadTsInfo,
+  extractTsInfoPathAndName,
+  getTsInfoModuleId,
+} from './tsInfo';
 
-export function createMdxPlugin(options?: MdxOptions): Plugin[] {
-  const resolvedOptions: MdxOptions = {
+export function createMdxPlugin(options?: ReactMdxOptions): Plugin[] {
+  const resolvedOptions: ReactMdxOptions = {
     ...options,
     remarkPlugins: [
       ...(options?.remarkPlugins || []),
@@ -22,42 +32,39 @@ export function createMdxPlugin(options?: MdxOptions): Plugin[] {
   const tsInfoFileToModuleIdMap = new Map<string, string>();
 
   return [
+    reactMdx(resolvedOptions),
     {
-      name: `${PLUGIN_NAME}:mdx`,
-      // vite-plugin-mdx's enforce is `pre` and I need to do something before it,
-      // so I also set to `pre`.
+      name: `${PLUGIN_NAME}:mdx-extends`,
       enforce: 'pre',
       async resolveId(source, importer) {
-        if (source.endsWith('?demo')) {
-          const resolved = await this.resolve(
-            source.replace(/\?demo$/, ''),
-            importer
-          );
+        // resolve demo. fulfill demo file path
+        if (source.startsWith(DEMO_MODULE_ID_PREFIX)) {
+          const filePath = extractDemoPath(source);
+          const resolved = await this.resolve(filePath, importer);
 
           if (!resolved || resolved.external) {
             throw new Error(
-              `[react-app] Can not resolve demo: '${source}'. importer: '${importer}'`
+              `[react-app] Can not resolve demo: '${filePath}'. importer: '${importer}'`
             );
           }
 
           demoFiles.add(resolved.id);
 
-          return `${DEMO_MODULE_ID_PREFIX}${resolved.id}`;
+          return getDemoModuleId(resolved.id);
         }
 
-        const [, requestPath, importName] =
-          source.match(/(.*?)\?tsInfo=(.*)/) || [];
-
-        if (requestPath && importName) {
-          const resolved = await this.resolve(requestPath, importer);
+        // resolve tsInfo. fulfill tsInfo file path
+        if (source.startsWith(TS_INFO_MODULE_ID_PREFIX)) {
+          const { filePath, exportName } = extractTsInfoPathAndName(source);
+          const resolved = await this.resolve(filePath, importer);
 
           if (!resolved || resolved.external) {
             throw new Error(
-              `[react-app] Can not resolve ts info: '${source}'. importer: '${importer}'`
+              `[react-app] Can not resolve ts info: '${filePath}'. importer: '${importer}'`
             );
           }
 
-          const tsInfoModuleId = `${TS_INFO_MODULE_ID_PREFIX}__${importName}__${resolved.id}`;
+          const tsInfoModuleId = getTsInfoModuleId(resolved.id, exportName);
 
           tsInfoFileToModuleIdMap.set(resolved.id, tsInfoModuleId);
 
@@ -66,26 +73,11 @@ export function createMdxPlugin(options?: MdxOptions): Plugin[] {
       },
       load(id) {
         if (id.startsWith(DEMO_MODULE_ID_PREFIX)) {
-          return loadDemo(id.slice(DEMO_MODULE_ID_PREFIX.length));
+          return loadDemo(id);
         }
 
         if (id.startsWith(TS_INFO_MODULE_ID_PREFIX)) {
-          const [, importName, filePath] =
-            id.slice(TS_INFO_MODULE_ID_PREFIX.length).match(/__(.*?)__(.*)/) ||
-            [];
-          return loadTsInfo(filePath, importName);
-        }
-      },
-      transform(code, id) {
-        // TODO: parse slides
-        // vite-plugin-mdx looks for dependencies such as `@mdx-js/react` from the root, which may cause errors,
-        // so I inject the dependency myself here.
-        if (/\.mdx?$/.test(id)) {
-          return `
-import * as React from 'react';
-import { mdx } from '@mdx-js/react';
-
-${code}`;
+          return loadTsInfo(id);
         }
       },
       handleHotUpdate(ctx) {
@@ -110,11 +102,11 @@ ${code}`;
           }
         }
 
-        return modules;
+        // `handleHotUpdate` is hook first, so we return modules when it is changed
+        if (modules.length !== ctx.modules.length) {
+          return modules;
+        }
       },
     },
-    // Set namedImports to empty object
-    // because I had manually injected the dependencies before.
-    ...viteMdx.withImports({})(resolvedOptions),
   ];
 }

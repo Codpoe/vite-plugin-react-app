@@ -3,7 +3,7 @@
  */
 import type { Root } from 'mdast';
 import * as ts from 'typescript';
-import { MDX_TS_INFO_RE } from '../constants';
+import { MDX_TS_INFO_RE, TS_INFO_MODULE_ID_PREFIX } from '../constants';
 
 export interface TsInterfaceInfo {
   name: string;
@@ -41,7 +41,7 @@ export function extractInterfaceInfo(
   const fileSymbol = checker.getSymbolAtLocation(sourceFile);
 
   if (!fileSymbol || !fileSymbol.exports) {
-    throw new Error(`Unexpected fileSymbol. ${filePath}`);
+    throw new Error(`[react-app] Unexpected fileSymbol. ${filePath}`);
   }
 
   const escapedExportName = ts.escapeLeadingUnderscores(exportName);
@@ -49,7 +49,7 @@ export function extractInterfaceInfo(
 
   if (!exportSymbol) {
     throw new Error(
-      `Named export '${exportName}' is not found in file ${filePath}`
+      `[react-app] Named export '${exportName}' is not found in file ${filePath}`
     );
   }
 
@@ -57,7 +57,9 @@ export function extractInterfaceInfo(
   const sourceDeclaration = sourceDeclareSymbol.declarations?.[0];
 
   if (!sourceDeclaration) {
-    throw new Error(`Can not find sourceDeclaration for ${exportName}`);
+    throw new Error(
+      `[react-app] Can not find sourceDeclaration for ${exportName}`
+    );
   }
 
   const interfaceInfo = collectInterfaceInfo(
@@ -79,11 +81,11 @@ export function extractInterfaceInfo(
     sourceSymbol: ts.Symbol
   ) {
     if (!ts.isInterfaceDeclaration(sourceDeclaration)) {
-      throw new Error(`Target is not an InterfaceDeclaration`);
+      throw new Error(`[react-app] Target is not an InterfaceDeclaration`);
     }
 
     if (!sourceSymbol) {
-      throw new Error(`Can not find symbol`);
+      throw new Error(`[react-app] Can not find symbol`);
     }
 
     const name = sourceDeclaration.name.getText();
@@ -103,7 +105,7 @@ export function extractInterfaceInfo(
           !ts.isMethodSignature(valueDeclaration))
       ) {
         throw new Error(
-          `Unexpected declaration type in interface. name: ${memberName}, kind: ${
+          `[react-app] Unexpected declaration type in interface. name: ${memberName}, kind: ${
             ts.SyntaxKind[valueDeclaration?.kind as ts.SyntaxKind]
           }`
         );
@@ -188,6 +190,16 @@ function getComment(declaration: ts.Declaration, sourceFileFullText: string) {
  * https://learning-notes.mistermicheels.com/javascript/typescript/compiler-api/
  */
 
+export function getTsInfoModuleId(filePath: string, exportName: string) {
+  return `${TS_INFO_MODULE_ID_PREFIX}__${exportName}__${filePath}`;
+}
+
+export function extractTsInfoPathAndName(id: string) {
+  const [, exportName, filePath] =
+    id.slice(TS_INFO_MODULE_ID_PREFIX.length).match(/__(.*?)__(.*)/) || [];
+  return { filePath, exportName };
+}
+
 export function tsInfoMdxPlugin() {
   return function TsInfoTransformer(tree: Root) {
     const addImports: string[] = [];
@@ -200,7 +212,7 @@ export function tsInfoMdxPlugin() {
         if (src && name) {
           const imported = `__tsInfo_${addImports.length}`;
           addImports.push(
-            `import * as ${imported} from '${src}?tsInfo=${name}';`
+            `import * as ${imported} from '${getTsInfoModuleId(src, name)}';`
           );
           child.value = `<TsInfo {...${imported}} />`;
         }
@@ -218,7 +230,9 @@ export function tsInfoMdxPlugin() {
   };
 }
 
-export function loadTsInfo(filePath: string, exportName: string): string {
+export function loadTsInfo(id: string) {
+  const { filePath, exportName } = extractTsInfoPathAndName(id);
   const tsInfo = extractInterfaceInfo(filePath, exportName);
+
   return `export const info = ${JSON.stringify(tsInfo)}`;
 }
