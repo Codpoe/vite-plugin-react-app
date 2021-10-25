@@ -1,4 +1,5 @@
 import { Plugin } from 'vite';
+import { readFile } from 'fs-extra';
 import {
   PagesService,
   ResolvedPagesConfig,
@@ -12,10 +13,7 @@ import {
   ENTRY_MODULE_ID,
   ENTRY_FILE,
 } from '../constants';
-import { slash } from '../utils';
 import { Route, RoutesOptions } from '../types';
-
-const slashedEntryFile = slash(ENTRY_FILE);
 
 export function createRoutesPlugin(
   options: RoutesOptions & { useWindicss: boolean }
@@ -28,44 +26,45 @@ export function createRoutesPlugin(
     // TODO: support multi entry
     // entries = getEntries(config.root, config.build.rollupOptions.input);
     {
-      name: `${PLUGIN_NAME}:html`,
+      name: `${PLUGIN_NAME}:entry`,
       config() {
         return {
-          resolve: {
-            alias: [
-              {
-                find: ENTRY_MODULE_ID,
-                replacement: ENTRY_FILE,
-              },
-            ],
-          },
           optimizeDeps: {
             include: ['react', 'react-dom', 'react-router-dom'],
           },
         };
       },
-      transformIndexHtml() {
-        return [
-          {
-            tag: 'div',
-            attrs: { id: 'app' },
-            injectTo: 'body-prepend',
-          },
-          {
-            tag: 'script',
-            attrs: {
-              type: 'module',
-              src: ENTRY_MODULE_ID,
+      transformIndexHtml(html) {
+        // Do not add entry file repeatedly
+        if (!html.includes(ENTRY_MODULE_ID)) {
+          return [
+            {
+              tag: 'div',
+              attrs: { id: 'app' },
+              injectTo: 'body-prepend',
             },
-            injectTo: 'body-prepend',
-          },
-        ];
+            {
+              tag: 'script',
+              attrs: {
+                type: 'module',
+                src: ENTRY_MODULE_ID,
+              },
+              injectTo: 'body-prepend',
+            },
+          ];
+        }
       },
-      transform(code, id) {
-        if (id === slashedEntryFile) {
+      resolveId(source) {
+        if (source === ENTRY_MODULE_ID) {
+          return ENTRY_MODULE_ID;
+        }
+      },
+      async load(id) {
+        if (id === ENTRY_MODULE_ID) {
+          const content = await readFile(ENTRY_FILE, 'utf-8');
           return `${
             options.useWindicss ? `import 'virtual:windi.css';\n` : ''
-          }${code}`;
+          }${content}`;
         }
       },
     },
