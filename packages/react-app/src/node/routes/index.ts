@@ -1,5 +1,4 @@
 import { Plugin } from 'vite';
-import { readFile } from 'fs-extra';
 import { isEqual } from 'lodash';
 import {
   PagesService,
@@ -7,15 +6,22 @@ import {
   resolvePageMeta,
   resolvePagesConfig,
 } from './PagesService';
-import { generateRoutes, generateRoutesCode } from './generateRoutes';
+import {
+  generateRoutes,
+  generateRoutesCode,
+  generatePagesCode,
+} from './generate';
 import {
   PLUGIN_NAME,
-  ROUTES_REQUEST_IDS,
   ROUTES_MODULE_ID,
   ENTRY_MODULE_ID,
   ENTRY_FILE,
+  PAGES_MODULE_ID,
 } from '../constants';
 import { Route, RoutesOptions } from '../types';
+import { slash } from '../utils';
+
+const slashedEntryFile = slash(ENTRY_FILE);
 
 export function createRoutesPlugin(
   options: RoutesOptions & { useWindicss: boolean }
@@ -31,6 +37,14 @@ export function createRoutesPlugin(
       name: `${PLUGIN_NAME}:entry`,
       config() {
         return {
+          resolve: {
+            alias: [
+              {
+                find: ENTRY_MODULE_ID,
+                replacement: ENTRY_FILE,
+              },
+            ],
+          },
           optimizeDeps: {
             include: ['react', 'react-dom', 'react-router-dom'],
           },
@@ -56,17 +70,11 @@ export function createRoutesPlugin(
           ];
         }
       },
-      resolveId(source) {
-        if (source === ENTRY_MODULE_ID) {
-          return ENTRY_MODULE_ID;
-        }
-      },
-      async load(id) {
-        if (id === ENTRY_MODULE_ID) {
-          const content = await readFile(ENTRY_FILE, 'utf-8');
+      transform(code, id) {
+        if (id === slashedEntryFile) {
           return `${
             options.useWindicss ? `import 'virtual:windi.css';\n` : ''
-          }${content}`;
+          }${code}`;
         }
       },
     },
@@ -105,46 +113,54 @@ export function createRoutesPlugin(
         await pagesService.close();
       },
       resolveId(id) {
-        return ROUTES_REQUEST_IDS.some(x => id.startsWith(x))
-          ? ROUTES_MODULE_ID
+        return [ROUTES_MODULE_ID, PAGES_MODULE_ID].some(x => id.startsWith(x))
+          ? id
           : null;
       },
       async load(id) {
-        if (id !== ROUTES_MODULE_ID) {
-          return;
+        if (id === ROUTES_MODULE_ID) {
+          let pages = await pagesService.getPages();
+          pages = (await options.onPagesGenerated?.(pages)) || pages;
+
+          if (!generatedRoutes) {
+            generatedRoutes = generateRoutes(pages);
+            generatedRoutes =
+              (await options.onRoutesGenerated?.(generatedRoutes)) ||
+              generatedRoutes;
+          }
+
+          let routesCode = generateRoutesCode(
+            generatedRoutes,
+            options.componentImportMode
+          );
+          routesCode =
+            (await options.onRoutesCodeGenerated?.(routesCode)) || routesCode;
+
+          return routesCode;
         }
 
-        await pagesService.start();
-        let pages = await pagesService.getPages();
-        pages = (await options.onPagesGenerated?.(pages)) || pages;
-
-        if (!generatedRoutes) {
-          generatedRoutes = generateRoutes(pages);
-          generatedRoutes =
-            (await options.onRoutesGenerated?.(generatedRoutes)) ||
-            generatedRoutes;
+        if (id === PAGES_MODULE_ID) {
+          let pages = await pagesService.getPages();
+          pages = (await options.onPagesGenerated?.(pages)) || pages;
+          return generatePagesCode(pages);
         }
-
-        let routesCode = generateRoutesCode(
-          generatedRoutes,
-          options.componentImportMode
-        );
-        routesCode =
-          (await options.onRoutesCodeGenerated?.(routesCode)) || routesCode;
-
-        return routesCode;
       },
       async handleHotUpdate(ctx) {
-        const pages = await pagesService.getPages();
-        const page = pages[ctx.file];
+        const pagesModule =
+          ctx.server.moduleGraph.getModuleById(PAGES_MODULE_ID);
 
-        // If meta changed, add module for hot update
-        if (page) {
-          const newMeta = await resolvePageMeta(ctx.file, await ctx.read());
+        if (pagesModule) {
+          const pages = await pagesService.getPages();
+          const page = pages[ctx.file];
 
-          if (!isEqual(page.meta, newMeta)) {
-            page.meta = newMeta;
-            return ctx.modules.concat();
+          // If meta changed, add pagesModule for hot update
+          if (page) {
+            const newMeta = await resolvePageMeta(ctx.file, await ctx.read());
+
+            if (!isEqual(page.meta, newMeta)) {
+              page.meta = newMeta;
+              return ctx.modules.concat(pagesModule);
+            }
           }
         }
       },

@@ -1,4 +1,4 @@
-declare module 'virtual:react-app/routes' {
+declare module '/@react-app/routes*' {
   import * as React from 'react';
 
   interface Route {
@@ -11,6 +11,20 @@ declare module 'virtual:react-app/routes' {
   const routes: Route[];
 
   export default routes;
+}
+
+declare module '/@react-app/pages*' {
+  interface Page {
+    basePath: string;
+    routePath: string;
+    filePath: string;
+    meta: Record<string, any>;
+    isLayout?: boolean;
+  }
+
+  const pages: Record<string, Page>;
+
+  export default pages;
 }
 
 declare module 'virtual:icons/*' {

@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import routes from 'virtual:react-app/routes';
+import routes from '/@react-app/routes';
+import pages from '/@react-app/pages';
 import { PageLoader } from './PageLoader';
+
+console.log(pages);
 
 function renderRoutes(list: typeof routes) {
   return list.map(item => (

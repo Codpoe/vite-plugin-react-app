@@ -3,6 +3,7 @@ import EventEmitter from 'events';
 import chokidar, { FSWatcher } from 'chokidar';
 import { readFile } from 'fs-extra';
 import { extract, parse } from 'jest-docblock';
+import { normalizePath } from 'vite';
 import { slash } from '../utils';
 import { Page } from '../types';
 import { RoutesOptions } from '..';
@@ -179,18 +180,19 @@ export class PagesService extends EventEmitter {
     const isLayout = isLayoutFile(filePath);
     const routePath = resolveRoutePath(baseRoutePath, filePath);
     const absFilePath = path.resolve(dir, filePath);
+    const meta = await resolvePageMeta(absFilePath);
 
     let page: Page = {
       basePath: baseRoutePath,
       routePath,
       filePath: absFilePath,
-      meta: resolvePageMeta(absFilePath),
+      meta,
       isLayout,
     };
 
     page = (await this.config.extendPage?.(page)) || page;
 
-    this.pages[absFilePath] = page;
+    this.pages[normalizePath(absFilePath)] = page;
   }
 
   removePage(key: string) {

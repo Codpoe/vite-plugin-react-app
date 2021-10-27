@@ -108,3 +108,9 @@ export const routes = ${routesStr};
 export default routes;
 `;
 }
+
+export function generatePagesCode(pages: Record<string, Page>) {
+  return `
+export const pages = ${JSON.stringify(pages, null, 2)}
+export default pages;`;
+}
