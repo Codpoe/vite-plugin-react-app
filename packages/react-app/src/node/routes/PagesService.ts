@@ -1,7 +1,6 @@
 import path from 'path';
 import EventEmitter from 'events';
 import chokidar, { FSWatcher } from 'chokidar';
-import { ViteDevServer } from 'vite';
 import { readFile } from 'fs-extra';
 import { extract, parse } from 'jest-docblock';
 import { slash } from '../utils';
