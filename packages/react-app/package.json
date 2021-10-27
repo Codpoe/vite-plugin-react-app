@@ -34,12 +34,14 @@
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
     "jest-docblock": "^27.0.6",
+    "lodash": "^4.17.21",
     "unplugin-icons": "^0.12.14",
     "vite-plugin-react-mdx": "^0.1.1",
     "vite-plugin-windicss": "^1.4.10"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
+    "@types/lodash": "^4.14.176",
     "@types/node": "^16.7.6",
     "@types/react": "^17.0.27",
     "@types/react-dom": "^17.0.9",

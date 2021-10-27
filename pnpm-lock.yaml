@@ -64,6 +64,7 @@ importers:
       '@mdx-js/mdx': ^1.6.22
       '@svgr/core': ^5.5.0
       '@types/fs-extra': ^9.0.13
+      '@types/lodash': ^4.14.176
       '@types/node': ^16.7.6
       '@types/react': ^17.0.27
       '@types/react-dom': ^17.0.9
@@ -73,6 +74,7 @@ importers:
       fs-extra: ^10.0.0
       history: ^5.0.1
       jest-docblock: ^27.0.6
+      lodash: ^4.17.21
       react: ^17.0.2
       react-dom: ^17.0.2
       react-router-dom: ^6.0.0-beta.6
@@ -87,11 +89,13 @@ importers:
       fast-glob: 3.2.7
       fs-extra: 10.0.0
       jest-docblock: 27.0.6
+      lodash: 4.17.21
       unplugin-icons: 0.12.14_@svgr+core@5.5.0+vite@2.6.5
       vite-plugin-react-mdx: 0.1.1
       vite-plugin-windicss: 1.4.10_vite@2.6.5
     devDependencies:
       '@types/fs-extra': 9.0.13
+      '@types/lodash': 4.14.176
       '@types/node': 16.10.3
       '@types/react': 17.0.27
       '@types/react-dom': 17.0.9
@@ -657,6 +661,10 @@ packages:
 
   /@types/json-schema/7.0.9:
     resolution: {integrity: sha512-qcUXuemtEu+E5wZSJHNxUXeCZhAfXKQ41D+duX+VYPde7xyEVZci+/oXKJL13tnRs9lR2pr4fod59GT6/X1/yQ==}
+    dev: true
+
+  /@types/lodash/4.14.176:
+    resolution: {integrity: sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==}
     dev: true
 
   /@types/mdast/3.0.10:
@@ -1637,7 +1645,7 @@ packages:
     dev: true
 
   /fsevents/2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    resolution: {integrity: sha1-ilJveLj99GI7cJ4Ll1xSwkwC/Ro=}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     optional: true

@@ -1,6 +1,9 @@
 import path from 'path';
+import EventEmitter from 'events';
 import chokidar, { FSWatcher } from 'chokidar';
 import { ViteDevServer } from 'vite';
+import { readFile } from 'fs-extra';
+import { extract, parse } from 'jest-docblock';
 import { slash } from '../utils';
 import { Page } from '../types';
 import { RoutesOptions } from '..';
@@ -58,6 +61,21 @@ export function resolvePagesConfig(
   }, {} as ResolvedPagesConfig);
 }
 
+/**
+ * - parse doc block for normal page
+ * - parse front matter for markdown page
+ */
+export async function resolvePageMeta(
+  filePath: string,
+  fileContent?: string
+): Promise<Record<string, any>> {
+  if (/\.(js|ts)x?$/.test(filePath)) {
+    return parse(extract(fileContent ?? (await readFile(filePath, 'utf-8'))));
+  }
+  return {};
+  // TODO: parse markdown frontmatter
+}
+
 function resolveRoutePath(baseRoutePath: string, relativeFilePath: string) {
   const ext = path.extname(relativeFilePath);
 
@@ -79,17 +97,17 @@ function isLayoutFile(filePath: string) {
 export interface PagesServiceConfig {
   pagesConfig: ResolvedPagesConfig;
   extendPage: RoutesOptions['extendPage'];
-  server: ViteDevServer;
-  moduleId: string;
-  onReload: () => void;
+  onPagesChanged: () => void;
 }
 
-export class PagesService {
+export class PagesService extends EventEmitter {
   private startPromise: Promise<void[]> | null = null;
   private watchers: FSWatcher[] = [];
   private pages: Record<string, Page> = {};
 
-  constructor(private config: PagesServiceConfig) {}
+  constructor(private config: PagesServiceConfig) {
+    super();
+  }
 
   start() {
     if (this.startPromise) {
@@ -116,12 +134,12 @@ export class PagesService {
                 await this.setPage(baseRoutePath, dir, filePath);
 
                 if (isReady) {
-                  this.reload();
+                  this.config.onPagesChanged();
                 }
               })
               .on('unlink', filePath => {
                 this.removePage(path.resolve(dir, filePath));
-                this.reload();
+                this.emit('pages-change');
               })
               .on('change', () => {
                 // TODO: detect meta changed
@@ -149,20 +167,6 @@ export class PagesService {
     this.startPromise = null;
   }
 
-  reload() {
-    this.config.onReload();
-
-    const module = this.config.server.moduleGraph.getModuleById(
-      this.config.moduleId
-    );
-
-    if (module) {
-      this.config.server.moduleGraph.invalidateModule(module);
-    }
-
-    this.config.server.ws.send({ type: 'full-reload' });
-  }
-
   async getPages() {
     if (!this.startPromise) {
       throw new Error('PagesService is not started yet');
@@ -181,7 +185,7 @@ export class PagesService {
       basePath: baseRoutePath,
       routePath,
       filePath: absFilePath,
-      meta: {},
+      meta: resolvePageMeta(absFilePath),
       isLayout,
     };
 

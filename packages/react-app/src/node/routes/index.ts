@@ -1,8 +1,10 @@
 import { Plugin } from 'vite';
 import { readFile } from 'fs-extra';
+import { isEqual } from 'lodash';
 import {
   PagesService,
   ResolvedPagesConfig,
+  resolvePageMeta,
   resolvePagesConfig,
 } from './PagesService';
 import { generateRoutes, generateRoutesCode } from './generateRoutes';
@@ -81,11 +83,18 @@ export function createRoutesPlugin(
       configureServer(server) {
         pagesService = new PagesService({
           pagesConfig,
-          server,
-          moduleId: ROUTES_MODULE_ID,
           extendPage: options.extendPage,
-          onReload() {
+          onPagesChanged() {
             generatedRoutes = null;
+
+            const routesModule =
+              server.moduleGraph.getModuleById(ROUTES_MODULE_ID);
+
+            if (routesModule) {
+              server.moduleGraph.invalidateModule(routesModule);
+            }
+
+            server.ws.send({ type: 'full-reload' });
           },
         });
       },
@@ -124,6 +133,20 @@ export function createRoutesPlugin(
           (await options.onRoutesCodeGenerated?.(routesCode)) || routesCode;
 
         return routesCode;
+      },
+      async handleHotUpdate(ctx) {
+        const pages = await pagesService.getPages();
+        const page = pages[ctx.file];
+
+        // If meta changed, add module for hot update
+        if (page) {
+          const newMeta = await resolvePageMeta(ctx.file, await ctx.read());
+
+          if (!isEqual(page.meta, newMeta)) {
+            page.meta = newMeta;
+            return ctx.modules.concat();
+          }
+        }
       },
     },
   ];
