@@ -89,22 +89,30 @@ export function createRoutesPlugin(
         );
       },
       configureServer(server) {
+        const reloadRoutesModule = (isAdd: boolean) => {
+          generatedRoutes = null;
+
+          const routesModule =
+            server.moduleGraph.getModuleById(ROUTES_MODULE_ID);
+
+          if (routesModule) {
+            server.moduleGraph.invalidateModule(routesModule);
+          }
+
+          // if add page, trigger the change event of routes manually
+          if (isAdd) {
+            server.watcher.emit('change', ROUTES_MODULE_ID);
+          }
+        };
+
         pagesService = new PagesService({
           pagesConfig,
           extendPage: options.extendPage,
-          onPagesChanged() {
-            generatedRoutes = null;
-
-            const routesModule =
-              server.moduleGraph.getModuleById(ROUTES_MODULE_ID);
-
-            if (routesModule) {
-              server.moduleGraph.invalidateModule(routesModule);
-            }
-
-            server.ws.send({ type: 'full-reload' });
-          },
         });
+
+        pagesService
+          .on('add-page', () => reloadRoutesModule(true))
+          .on('remove-page', () => reloadRoutesModule(false));
       },
       buildStart() {
         pagesService.start();

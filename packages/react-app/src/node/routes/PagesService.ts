@@ -97,7 +97,6 @@ function isLayoutFile(filePath: string) {
 export interface PagesServiceConfig {
   pagesConfig: ResolvedPagesConfig;
   extendPage: RoutesOptions['extendPage'];
-  onPagesChanged: () => void;
 }
 
 export class PagesService extends EventEmitter {
@@ -131,15 +130,10 @@ export class PagesService extends EventEmitter {
                 ignored,
               })
               .on('add', async filePath => {
-                await this.setPage(baseRoutePath, dir, filePath);
-
-                if (isReady) {
-                  this.config.onPagesChanged();
-                }
+                await this.addPage(baseRoutePath, dir, filePath, !isReady);
               })
               .on('unlink', filePath => {
-                this.removePage(path.resolve(dir, filePath));
-                this.emit('pages-change');
+                this.removePage(path.resolve(dir, filePath), !isReady);
               })
               .on('change', () => {
                 // TODO: detect meta changed
@@ -176,7 +170,12 @@ export class PagesService extends EventEmitter {
     return this.pages;
   }
 
-  async setPage(baseRoutePath: string, dir: string, filePath: string) {
+  async addPage(
+    baseRoutePath: string,
+    dir: string,
+    filePath: string,
+    silent = false
+  ) {
     const isLayout = isLayoutFile(filePath);
     const routePath = resolveRoutePath(baseRoutePath, filePath);
     const absFilePath = path.resolve(dir, filePath);
@@ -191,11 +190,30 @@ export class PagesService extends EventEmitter {
     };
 
     page = (await this.config.extendPage?.(page)) || page;
-
     this.pages[normalizePath(absFilePath)] = page;
+
+    if (!silent) {
+      this.emit('add-page', page);
+    }
+
+    return page;
   }
 
-  removePage(key: string) {
-    delete this.pages[key];
+  removePage(key: string, silent = false) {
+    key = normalizePath(key);
+
+    const page = this.pages[key];
+
+    if (page) {
+      delete this.pages[key];
+
+      if (!silent) {
+        this.emit('remove-page', page);
+      }
+
+      return page;
+    }
+
+    return null;
   }
 }
