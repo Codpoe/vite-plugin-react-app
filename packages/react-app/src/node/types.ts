@@ -2,6 +2,9 @@ import { Options as ViteReactOptions } from '@vitejs/plugin-react';
 import { UserOptions as WindicssOptions } from 'vite-plugin-windicss';
 import { Options as IconsOptions } from 'unplugin-icons';
 import { ReactMdxOptions } from 'vite-plugin-react-mdx';
+import { Route, Page } from '../../commonTypes';
+
+export { Route, Page };
 
 export interface PagesObj {
   dir: string;
@@ -22,21 +25,6 @@ export type ComponentImportMode =
   | 'sync'
   | 'lazy'
   | ((filePath: string) => string | { component: string; extraCode?: string });
-
-export interface Route {
-  path: string;
-  component: any;
-  exact: boolean;
-  children?: Route[];
-}
-
-export interface Page {
-  basePath: string;
-  routePath: string;
-  filePath: string;
-  meta: Record<string, any>;
-  isLayout?: boolean;
-}
 
 export interface RoutesOptions {
   /**

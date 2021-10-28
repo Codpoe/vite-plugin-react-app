@@ -161,15 +161,20 @@ export function createRoutesPlugin(
           const pages = await pagesService.getPages();
           const page = pages[ctx.file];
 
+          console.log('11111111', ctx.file);
+
           // If meta changed, add pagesModule for hot update
           if (page) {
             const newMeta = await resolvePageMeta(ctx.file, await ctx.read());
+            console.log('2222', { newMeta, meta: page.meta });
 
             if (!isEqual(page.meta, newMeta)) {
               page.meta = newMeta;
               return ctx.modules.concat(pagesModule);
             }
           }
+
+          console.log('3333333333333');
         }
       },
     },

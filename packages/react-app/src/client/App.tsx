@@ -1,23 +1,46 @@
-import * as React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route as ReactRoute } from 'react-router-dom';
 import routes from '/@react-app/routes';
 import pages from '/@react-app/pages';
 import { PageLoader } from './PageLoader';
-
-console.log(pages);
+import { ClientContext, ClientContextValue } from './context';
 
 function renderRoutes(list: typeof routes) {
   return list.map(item => (
-    <Route
+    <ReactRoute
       key={item.path}
       path={item.path}
       element={<PageLoader component={item.component} />}
     >
       {item.children?.length ? renderRoutes(item.children) : undefined}
-    </Route>
+    </ReactRoute>
   ));
 }
 
 export const App: React.FC = () => {
-  return <Routes>{renderRoutes(routes)}</Routes>;
+  const [contextValue, setContextValue] = useState<ClientContextValue>({
+    routes,
+    pages,
+  });
+
+  useEffect(() => {
+    if (import.meta.hot) {
+      import.meta.hot.accept(
+        ['/@react-app/routes', '/@react-app/pages'],
+        ([routesModule, pagesModule]) => {
+          setContextValue(prev => ({
+            ...prev,
+            routes: routesModule?.default ?? prev.routes,
+            pages: pagesModule?.default ?? prev.pages,
+          }));
+        }
+      );
+    }
+  }, []);
+
+  return (
+    <ClientContext.Provider value={contextValue}>
+      <Routes>{renderRoutes(routes)}</Routes>
+    </ClientContext.Provider>
+  );
 };

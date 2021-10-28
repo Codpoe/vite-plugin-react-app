@@ -4,7 +4,8 @@
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
     "jsx": "react",
-    "outDir": "../../dist/client"
+    "outDir": "../../dist/client",
+    "types": ["vite/client", "../../clientTypes"]
   },
-  "include": [".", "../../clientTypes.d.ts"]
+  "include": ["."]
 }

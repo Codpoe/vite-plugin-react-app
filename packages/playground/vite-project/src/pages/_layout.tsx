@@ -1,6 +1,10 @@
-import { Suspense } from 'react';
+/**
+ * @title layout213
+ */
+import { Suspense, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { MDXProvider } from '@mdx-js/react';
+import { useClientContext } from 'vite-plugin-react-app/client';
 
 function Demo(props: any) {
   return (
@@ -21,6 +25,10 @@ function TsInfo(props: any) {
 }
 
 export default function AppLayout() {
+  const clientContext = useClientContext();
+  useEffect(() => {
+    console.log(clientContext);
+  }, [clientContext]);
   return (
     <div>
       <h1>App Layout</h1>
