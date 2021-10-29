@@ -2,7 +2,6 @@
  * @title layout213
  */
 import { Suspense, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
 import { MDXProvider } from '@mdx-js/react';
 import { useClientContext } from 'vite-plugin-react-app/client';
 
@@ -24,7 +23,7 @@ function TsInfo(props: any) {
   );
 }
 
-export default function AppLayout() {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const clientContext = useClientContext();
   useEffect(() => {
     console.log(clientContext);
@@ -33,9 +32,7 @@ export default function AppLayout() {
     <div>
       <h1>App Layout</h1>
       <MDXProvider components={{ Demo, TsInfo }}>
-        <Suspense fallback="app loading">
-          <Outlet />
-        </Suspense>
+        <Suspense fallback="app loading">{children}</Suspense>
       </MDXProvider>
     </div>
   );

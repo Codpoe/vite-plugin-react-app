@@ -6,15 +6,19 @@ import { PageLoader } from './PageLoader';
 import { ClientContext, ClientContextValue } from './context';
 
 function renderRoutes(list: typeof routes) {
-  return list.map(item => (
-    <ReactRoute
-      key={item.path}
-      path={item.path}
-      element={<PageLoader component={item.component} />}
-    >
-      {item.children?.length ? renderRoutes(item.children) : undefined}
-    </ReactRoute>
-  ));
+  return list.map(item => {
+    const isLayout = Boolean(item.children?.length);
+
+    return (
+      <ReactRoute
+        key={item.path}
+        path={item.path}
+        element={<PageLoader component={item.component} isLayout={isLayout} />}
+      >
+        {isLayout ? renderRoutes(item.children!) : undefined}
+      </ReactRoute>
+    );
+  });
 }
 
 export const App: React.FC = () => {

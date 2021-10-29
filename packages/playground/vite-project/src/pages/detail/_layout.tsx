@@ -1,7 +1,10 @@
 import { Suspense, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
 
-export default function DetailLayout() {
+export default function DetailLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   useEffect(() => {
     console.log('mounted');
   }, []);
@@ -9,9 +12,7 @@ export default function DetailLayout() {
   return (
     <div>
       <h1 className="text-indigo-500">Detail Layout</h1>
-      <Suspense fallback="detail loading">
-        <Outlet />
-      </Suspense>
+      <Suspense fallback="detail loading">{children}</Suspense>
     </div>
   );
 }
