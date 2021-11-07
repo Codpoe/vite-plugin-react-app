@@ -30,15 +30,15 @@
   "dependencies": {
     "@mdx-js/mdx": "^1.6.22",
     "@svgr/core": "^5.5.0",
-    "@vitejs/plugin-react": "^1.0.0",
+    "@vitejs/plugin-react": "^1.0.7",
     "chokidar": "^3.5.2",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
     "jest-docblock": "^27.0.6",
     "lodash": "^4.17.21",
-    "unplugin-icons": "^0.12.14",
+    "unplugin-icons": "^0.12.18",
     "vite-plugin-react-mdx": "^0.1.1",
-    "vite-plugin-windicss": "^1.4.10"
+    "vite-plugin-windicss": "^1.5.1"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
@@ -46,9 +46,9 @@
     "@types/node": "^16.7.6",
     "@types/react": "^17.0.27",
     "@types/react-dom": "^17.0.9",
-    "history": "^5.0.1",
+    "history": "^5.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^6.0.0-beta.6"
+    "react-router-dom": "^6.0.1"
   }
 }
