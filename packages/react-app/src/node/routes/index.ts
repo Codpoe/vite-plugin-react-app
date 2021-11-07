@@ -1,4 +1,4 @@
-import { Plugin } from 'vite';
+import { Plugin, ViteDevServer } from 'vite';
 import { isEqual } from 'lodash';
 import {
   PagesService,
@@ -16,7 +16,6 @@ import {
   ROUTES_MODULE_ID,
   ENTRY_MODULE_ID,
   ENTRY_FILE,
-  PAGES_MODULE_ID,
   PAGES_META_MODULE_ID,
 } from '../constants';
 import { Route, RoutesOptions } from '../types';
@@ -27,6 +26,7 @@ const slashedEntryFile = slash(ENTRY_FILE);
 export function createRoutesPlugin(
   options: RoutesOptions & { useWindicss: boolean }
 ): Plugin[] {
+  let viteServer: ViteDevServer;
   let pagesConfig: ResolvedPagesConfig;
   let pagesService: PagesService;
   let generatedRoutes: Route[] | null = null;
@@ -90,19 +90,22 @@ export function createRoutesPlugin(
         );
       },
       configureServer(server) {
+        viteServer = server;
+      },
+      buildStart() {
         const reloadRoutesModule = (isAdd: boolean) => {
           generatedRoutes = null;
 
           const routesModule =
-            server.moduleGraph.getModuleById(ROUTES_MODULE_ID);
+            viteServer.moduleGraph.getModuleById(ROUTES_MODULE_ID);
 
           if (routesModule) {
-            server.moduleGraph.invalidateModule(routesModule);
+            viteServer.moduleGraph.invalidateModule(routesModule);
           }
 
           // if add page, trigger the change event of routes manually
           if (isAdd) {
-            server.watcher.emit('change', ROUTES_MODULE_ID);
+            viteServer.watcher.emit('change', ROUTES_MODULE_ID);
           }
         };
 
@@ -113,10 +116,8 @@ export function createRoutesPlugin(
 
         pagesService
           .on('add-page', () => reloadRoutesModule(true))
-          .on('remove-page', () => reloadRoutesModule(false));
-      },
-      buildStart() {
-        pagesService.start();
+          .on('remove-page', () => reloadRoutesModule(false))
+          .start();
       },
       async closeBundle() {
         await pagesService.close();
