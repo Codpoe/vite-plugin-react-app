@@ -9,7 +9,7 @@ import {
 import {
   generateRoutes,
   generateRoutesCode,
-  generatePagesCode,
+  generatePagesMeta,
 } from './generate';
 import {
   PLUGIN_NAME,
@@ -17,6 +17,7 @@ import {
   ENTRY_MODULE_ID,
   ENTRY_FILE,
   PAGES_MODULE_ID,
+  PAGES_META_MODULE_ID,
 } from '../constants';
 import { Route, RoutesOptions } from '../types';
 import { slash } from '../utils';
@@ -121,11 +122,13 @@ export function createRoutesPlugin(
         await pagesService.close();
       },
       resolveId(id) {
-        return [ROUTES_MODULE_ID, PAGES_MODULE_ID].some(x => id.startsWith(x))
+        return [ROUTES_MODULE_ID, PAGES_META_MODULE_ID].some(x =>
+          id.startsWith(x)
+        )
           ? id
           : null;
       },
-      async load(id) {
+      async load(id, ssr) {
         if (id === ROUTES_MODULE_ID) {
           let pages = await pagesService.getPages();
           pages = (await options.onPagesGenerated?.(pages)) || pages;
@@ -137,44 +140,36 @@ export function createRoutesPlugin(
               generatedRoutes;
           }
 
-          let routesCode = generateRoutesCode(
-            generatedRoutes,
-            options.componentImportMode
-          );
+          let routesCode = generateRoutesCode(generatedRoutes, ssr);
           routesCode =
             (await options.onRoutesCodeGenerated?.(routesCode)) || routesCode;
 
           return routesCode;
         }
 
-        if (id === PAGES_MODULE_ID) {
+        if (id === PAGES_META_MODULE_ID) {
           let pages = await pagesService.getPages();
           pages = (await options.onPagesGenerated?.(pages)) || pages;
-          return generatePagesCode(pages);
+          return generatePagesMeta(pages);
         }
       },
       async handleHotUpdate(ctx) {
-        const pagesModule =
-          ctx.server.moduleGraph.getModuleById(PAGES_MODULE_ID);
+        const pagesMetaModule =
+          ctx.server.moduleGraph.getModuleById(PAGES_META_MODULE_ID);
 
-        if (pagesModule) {
+        if (pagesMetaModule) {
           const pages = await pagesService.getPages();
           const page = pages[ctx.file];
-
-          console.log('11111111', ctx.file);
 
           // If meta changed, add pagesModule for hot update
           if (page) {
             const newMeta = await resolvePageMeta(ctx.file, await ctx.read());
-            console.log('2222', { newMeta, meta: page.meta });
 
             if (!isEqual(page.meta, newMeta)) {
               page.meta = newMeta;
-              return ctx.modules.concat(pagesModule);
+              return ctx.modules.concat(pagesMetaModule);
             }
           }
-
-          console.log('3333333333333');
         }
       },
     },

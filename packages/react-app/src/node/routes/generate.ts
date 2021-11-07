@@ -1,4 +1,4 @@
-import { Page, Route, ComponentImportMode } from '../types';
+import { Page, Route } from '../types';
 
 interface ParentRoute extends Route {
   children: Route[];
@@ -50,19 +50,15 @@ export function generateRoutes(pages: Record<string, Page>): Route[] {
   return allRoutes;
 }
 
-export function generateRoutesCode(
-  routes: Route[],
-  componentImportMode: ComponentImportMode = 'lazy'
-) {
+export function generateRoutesCode(routes: Route[], ssr?: boolean) {
   const imports: string[] = [`import * as React from 'react';`];
   const lazyImports: string[] = [];
-  let extraCode = '';
   let index = 0;
 
   const routesStr = JSON.stringify(routes, null, 2).replace(
     /"component":\s("(.*?)")/g,
     (str: string, replaceStr: string, component: string) => {
-      if (componentImportMode === 'sync') {
+      if (ssr) {
         const name = `__route_${index++}`;
         const importStr = `import ${name} from '${component}';`;
 
@@ -73,28 +69,14 @@ export function generateRoutesCode(
         return str.replace(replaceStr, name);
       }
 
-      if (componentImportMode === 'lazy') {
-        const name = `__route_${index++}`;
-        const lazyImportStr = `const ${name} = React.lazy(() => import('${component}'));`;
+      const name = `__route_${index++}`;
+      const lazyImportStr = `const ${name} = React.lazy(() => import('${component}'));`;
 
-        if (!lazyImports.includes(lazyImportStr)) {
-          lazyImports.push(lazyImportStr);
-        }
-
-        return str.replace(replaceStr, name);
+      if (!lazyImports.includes(lazyImportStr)) {
+        lazyImports.push(lazyImportStr);
       }
 
-      const res = componentImportMode(component);
-      let newComponent: string;
-
-      if (typeof res === 'object') {
-        newComponent = res.component;
-        extraCode = res.extraCode || '';
-      } else {
-        newComponent = res;
-      }
-
-      return str.replace(replaceStr, newComponent);
+      return str.replace(replaceStr, name);
     }
   );
 
@@ -102,15 +84,24 @@ export function generateRoutesCode(
 
 ${lazyImports.join('\n')}
 
-${extraCode}
-
 export const routes = ${routesStr};
 export default routes;
 `;
 }
 
-export function generatePagesCode(pages: Record<string, Page>) {
+export function generatePagesMeta(pages: Record<string, Page>) {
+  const pagesMeta = Object.values(pages).reduce<
+    Record<string, Record<string, any>>
+  >((acc, cur) => {
+    // skip layout file
+    if (cur.isLayout) {
+      return acc;
+    }
+    acc[cur.routePath] = cur.meta;
+    return acc;
+  }, {});
+
   return `
-export const pages = ${JSON.stringify(pages, null, 2)}
-export default pages;`;
+export const pagesMeta = ${JSON.stringify(pagesMeta, null, 2)};
+export default pagesMeta;`;
 }

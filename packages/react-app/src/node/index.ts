@@ -5,6 +5,7 @@ import icons from 'unplugin-icons/vite';
 import { createRoutesPlugin } from './routes';
 import { createMdxPlugin } from './mdx';
 import { UserOptions } from './types';
+import { createThemePlugin } from './theme';
 
 export function reactApp(options: UserOptions = {}): PluginOption[] {
   return [
@@ -15,6 +16,8 @@ export function reactApp(options: UserOptions = {}): PluginOption[] {
     }),
     // mdx
     ...(options.mdx !== false ? createMdxPlugin(options.mdx) : []),
+    // theme
+    createThemePlugin(),
     // react
     ...(options.react !== false ? react(options.react) : []),
     // windicss

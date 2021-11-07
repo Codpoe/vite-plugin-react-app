@@ -4,11 +4,3 @@ export interface Route {
   exact: boolean;
   children?: Route[];
 }
-
-export interface Page {
-  basePath: string;
-  routePath: string;
-  filePath: string;
-  meta: Record<string, any>;
-  isLayout?: boolean;
-}

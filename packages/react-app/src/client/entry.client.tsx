@@ -5,9 +5,7 @@ import { App } from './App';
 
 render(
   <BrowserRouter>
-    <React.Suspense fallback={false}>
-      <App />
-    </React.Suspense>
+    <App />
   </BrowserRouter>,
   document.getElementById('app')
 );

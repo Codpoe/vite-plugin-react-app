@@ -94,6 +94,10 @@ function isLayoutFile(filePath: string) {
   return path.basename(filePath).startsWith('_layout');
 }
 
+function is404File(filePath: string) {
+  return path.basename(filePath).startsWith('404');
+}
+
 export interface PagesServiceConfig {
   pagesConfig: ResolvedPagesConfig;
   extendPage: RoutesOptions['extendPage'];
@@ -176,7 +180,6 @@ export class PagesService extends EventEmitter {
     filePath: string,
     silent = false
   ) {
-    const isLayout = isLayoutFile(filePath);
     const routePath = resolveRoutePath(baseRoutePath, filePath);
     const absFilePath = path.resolve(dir, filePath);
     const meta = await resolvePageMeta(absFilePath);
@@ -186,7 +189,8 @@ export class PagesService extends EventEmitter {
       routePath,
       filePath: absFilePath,
       meta,
-      isLayout,
+      isLayout: isLayoutFile(filePath),
+      is404: is404File(filePath),
     };
 
     page = (await this.config.extendPage?.(page)) || page;

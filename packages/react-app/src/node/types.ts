@@ -2,9 +2,18 @@ import { Options as ViteReactOptions } from '@vitejs/plugin-react';
 import { UserOptions as WindicssOptions } from 'vite-plugin-windicss';
 import { Options as IconsOptions } from 'unplugin-icons';
 import { ReactMdxOptions } from 'vite-plugin-react-mdx';
-import { Route, Page } from '../../commonTypes';
+import { Route } from '../../commonTypes';
 
-export { Route, Page };
+export type { Route } from '../../commonTypes';
+
+export interface Page {
+  basePath: string;
+  routePath: string;
+  filePath: string;
+  meta: Record<string, any>;
+  isLayout: boolean;
+  is404: boolean;
+}
 
 export interface PagesObj {
   dir: string;
@@ -36,11 +45,6 @@ export interface RoutesOptions {
    * Defines files/paths to be ignored when resolving pages.
    */
   ignored?: any;
-  /**
-   * Import page components directly or as async components
-   * @default 'lazy'
-   */
-  componentImportMode?: ComponentImportMode;
   /**
    * Extend page
    */

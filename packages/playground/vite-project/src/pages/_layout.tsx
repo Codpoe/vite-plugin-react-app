@@ -1,9 +1,10 @@
 /**
  * @title layout213
  */
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 import { MDXProvider } from '@mdx-js/react';
-import { useClientContext } from 'vite-plugin-react-app/client';
+import { usePagesMeta } from 'vite-plugin-react-app/client';
+import { useLocation } from 'react-router-dom';
 
 function Demo(props: any) {
   return (
@@ -24,13 +25,14 @@ function TsInfo(props: any) {
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const clientContext = useClientContext();
-  useEffect(() => {
-    console.log(clientContext);
-  }, [clientContext]);
+  const { pathname } = useLocation();
+  const pagesMeta = usePagesMeta()[pathname];
+
+  console.log(pagesMeta);
+
   return (
     <div>
-      <h1>App Layout</h1>
+      <h1>App Layout -- {pagesMeta.title}</h1>
       <MDXProvider components={{ Demo, TsInfo }}>
         <Suspense fallback="app loading">{children}</Suspense>
       </MDXProvider>
